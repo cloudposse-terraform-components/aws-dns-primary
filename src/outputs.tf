@@ -1,4 +1,9 @@
-output "mock" {
-  description = "Mock output example for the Cloud Posse Terraform component template"
-  value       = local.enabled ? "hello ${basename(abspath(path.module))}" : ""
+output "zones" {
+  value       = aws_route53_zone.root
+  description = "DNS zones"
+}
+
+output "acms" {
+  value       = { for k, v in module.acm : k => v.arn }
+  description = "ACM certificates for domains"
 }
