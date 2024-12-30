@@ -3,7 +3,7 @@ module test
 go 1.23.0
 
 require (
-	github.com/cloudposse/test-helpers v0.12.1-0.20241230141051-9ea15dd1bd78
+	github.com/cloudposse/test-helpers v0.12.1-0.20241230234852-5c270d517f3a
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/gruntwork-io/terratest v0.47.1
 	github.com/mattn/go-zglob v0.0.3 // indirect
@@ -16,7 +16,7 @@ require (
 
 // replace github.com/rebuy-de/aws-nuke/v2/mocks => github.com/ekristen/aws-nuke/v3/ v3.29.0
 
-require github.com/aws/aws-sdk-go v1.54.20
+require github.com/aws/aws-sdk-go v1.54.20 // indirect
 
 require (
 	cloud.google.com/go v0.110.10 // indirect

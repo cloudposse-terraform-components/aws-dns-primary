@@ -6,8 +6,27 @@ import (
 
 	"github.com/cloudposse/test-helpers/pkg/atmos"
 	helper "github.com/cloudposse/test-helpers/pkg/atmos/aws-component-helper"
-	"github.com/stretchr/testify/require"
+	"github.com/gruntwork-io/terratest/modules/aws"
+	"github.com/stretchr/testify/assert"
 )
+
+type zone struct {
+	Arn               string            `json:"arn"`
+	Comment           string            `json:"comment"`
+	DelegationSetId   string            `json:"delegation_set_id"`
+	ForceDestroy      bool              `json:"force_destroy"`
+	Id                string            `json:"id"`
+	Name              string            `json:"name"`
+	NameServers       []string          `json:"name_servers"`
+	PrimaryNameServer string            `json:"primary_name_server"`
+	Tags              map[string]string `json:"tags"`
+	TagsAll           map[string]string `json:"tags_all"`
+	Vpc               []struct {
+		ID     string `json:"vpc_id"`
+		Region string `json:"vpc_region"`
+	} `json:"vpc"`
+	ZoneID string `json:"zone_id"`
+}
 
 func TestComponent(t *testing.T) {
 	awsRegion := "us-east-2"
@@ -42,7 +61,7 @@ func TestComponent(t *testing.T) {
 						"root_zone": domainName,
 						"name":      "123456.",
 						"type":      "CNAME",
-						"ttl":       60,
+						"ttl":       120,
 						"records":   []string{domainName},
 					},
 				},
@@ -51,44 +70,29 @@ func TestComponent(t *testing.T) {
 			defer atm.GetAndDestroy("dns-primary/basic", "default-test", inputs)
 			component := atm.GetAndDeploy("dns-primary/basic", "default-test", inputs)
 
-			outputs := atm.OutputAll(component)
-			require.Equal(t, "", outputs)
+			zones := map[string]zone{}
+			atm.OutputStruct(component, "zones", &zones)
+			zone := zones[domainName]
 
-			// vpcId := atm.Output(component, "vpc_id")
-			// require.True(t, strings.HasPrefix(vpcId, "vpc-"))
+			DomainRecordName := fmt.Sprintf("%s.", domainName)
+			aRecord := aws.GetRoute53Record(t, zone.ZoneID, zone.Name, "A", awsRegion)
+			assert.Equal(t, DomainRecordName, *aRecord.Name)
+			assert.EqualValues(t, 60, *aRecord.TTL)
+			assert.Equal(t, "127.0.0.1", *aRecord.ResourceRecords[0].Value)
 
-			// vpc := aws.GetVpcById(t, vpcId, awsRegion)
+			wwwDomain := fmt.Sprintf("www.%s", domainName)
+			wwwDomainName := fmt.Sprintf("%s.", wwwDomain)
+			wwwRecord := aws.GetRoute53Record(t, zone.ZoneID, wwwDomain, "CNAME", awsRegion)
+			assert.Equal(t, wwwDomainName, *wwwRecord.Name)
+			assert.EqualValues(t, 60, *wwwRecord.TTL)
+			assert.Equal(t, domainName, *wwwRecord.ResourceRecords[0].Value)
 
-			// assert.Equal(t, vpc.Name, fmt.Sprintf("eg-default-ue2-test-vpc-terraform-%s", component.RandomIdentifier))
-			// assert.Equal(t, *vpc.CidrAssociations[0], "172.16.0.0/16")
-			// assert.Equal(t, *vpc.CidrBlock, "172.16.0.0/16")
-			// assert.Nil(t, vpc.Ipv6CidrAssociations)
-			// assert.Equal(t, vpc.Tags["Environment"], "ue2")
-			// assert.Equal(t, vpc.Tags["Namespace"], "eg")
-			// assert.Equal(t, vpc.Tags["Stage"], "test")
-			// assert.Equal(t, vpc.Tags["Tenant"], "default")
-
-			// subnets := vpc.Subnets
-			// require.Equal(t, 2, len(subnets))
-
-			// public_subnet_ids := atm.OutputList(component, "public_subnet_ids")
-			// assert.Empty(t, public_subnet_ids)
-
-			// public_subnet_cidrs := atm.OutputList(component, "public_subnet_cidrs")
-			// assert.Empty(t, public_subnet_cidrs)
-
-			// private_subnet_ids := atm.OutputList(component, "private_subnet_ids")
-			// assert.Equal(t, 2, len(private_subnet_ids))
-
-			// assert.Contains(t, private_subnet_ids, subnets[0].Id)
-			// assert.Contains(t, private_subnet_ids, subnets[1].Id)
-
-			// assert.False(t, aws.IsPublicSubnet(t, subnets[0].Id, awsRegion))
-			// assert.False(t, aws.IsPublicSubnet(t, subnets[1].Id, awsRegion))
-
-			// nats, err := GetNatsByVpcIdE(t, vpcId, awsRegion)
-			// assert.NoError(t, err)
-			// assert.Equal(t, 0, len(nats))
+			cNameDomain := fmt.Sprintf("123456.%s", domainName)
+			cNameDomainName := fmt.Sprintf("%s.", cNameDomain)
+			cNameRecord := aws.GetRoute53Record(t, zone.ZoneID, cNameDomain, "CNAME", awsRegion)
+			assert.Equal(t, cNameDomainName, *cNameRecord.Name)
+			assert.EqualValues(t, 120, *cNameRecord.TTL)
+			assert.Equal(t, domainName, *cNameRecord.ResourceRecords[0].Value)
 		})
 	})
 }
