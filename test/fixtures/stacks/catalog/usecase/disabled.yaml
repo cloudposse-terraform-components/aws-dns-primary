@@ -1,9 +1,10 @@
 components:
   terraform:
-    dns-primary/basic:
+    dns-primary/disabled:
       metadata:
         component: target
       vars:
+        enabled: false
         domain_names:
           - example.net
         record_config:
