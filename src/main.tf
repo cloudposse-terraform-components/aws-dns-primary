@@ -1,7 +1,7 @@
 locals {
-  domains_set    = toset(var.domain_names)
-  zone_recs_map  = { for zone in var.record_config : "${zone.name}${zone.root_zone}.${zone.type}" => zone }
-  zone_alias_map = { for zone in var.alias_record_config : "${zone.name}${zone.root_zone}.${zone.type}" => zone }
+  domains_set    = module.this.enabled ? toset(var.domain_names) : []
+  zone_recs_map  = module.this.enabled ? { for zone in var.record_config : "${zone.name}${zone.root_zone}.${zone.type}" => zone } : {}
+  zone_alias_map = module.this.enabled ? { for zone in var.alias_record_config : "${zone.name}${zone.root_zone}.${zone.type}" => zone } : {}
 }
 
 resource "aws_route53_zone" "root" {
