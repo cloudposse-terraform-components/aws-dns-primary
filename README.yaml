@@ -99,9 +99,9 @@ usage: |-
   > Use the [acm](https://docs.cloudposse.com/components/library/aws/acm) component for more advanced certificate
   > requirements.
 references:
-  - name: "cloudposse/terraform-aws-components"
+  - name: "cloudposse-terraform-components"
     description: "Cloud Posse's upstream component"
-    url: "https://github.com/cloudposse/terraform-aws-components/tree/main/modules/dns-primary"
+    url: "https://github.com/orgs/cloudposse-terraform-components/repositories"
 tags:
   - component/dns-primary
   - layer/network
