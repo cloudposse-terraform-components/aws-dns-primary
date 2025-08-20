@@ -54,7 +54,6 @@ a root domain that is provisioned in another account (not `dns`). In this case, 
 done manually by entering the name servers into the parent domain's records (instead of in the Registrar's records).
 
 The architecture does not support other configurations, or non-standard component names.
-
 ## Usage
 
 **Stack Level**: Global
@@ -105,8 +104,8 @@ components:
 > Use the [acm](https://docs.cloudposse.com/components/library/aws/acm) component for more advanced certificate
 > requirements.
 
-<!-- prettier-ignore-start -->
-<!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
+
+<!-- markdownlint-disable -->
 ## Requirements
 
 | Name | Version |
@@ -172,12 +171,17 @@ components:
 |------|-------------|
 | <a name="output_acms"></a> [acms](#output\_acms) | ACM certificates for domains |
 | <a name="output_zones"></a> [zones](#output\_zones) | DNS zones |
-<!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
-<!-- prettier-ignore-end -->
+<!-- markdownlint-restore -->
+
+
 
 ## References
 
-- [cloudposse/terraform-aws-components](https://github.com/cloudposse/terraform-aws-components/tree/main/modules/dns-primary) -
-  Cloud Posse's upstream component
+
+- [cloudposse/terraform-aws-components](https://github.com/cloudposse/terraform-aws-components/tree/main/modules/dns-primary) - Cloud Posse's upstream component
+
+
+
 
 [<img src="https://cloudposse.com/logo-300x69.svg" height="32" align="right"/>](https://cpco.io/homepage?utm_source=github&utm_medium=readme&utm_campaign=cloudposse-terraform-components/aws-dns-primary&utm_content=)
+
