@@ -99,6 +99,41 @@ func (s *ComponentSuite) TestBasic() {
 	s.DriftTest(component, stack, &inputs)
 }
 
+type queryLoggingConfig struct {
+	Id          string `json:"id"`
+	Arn         string `json:"arn"`
+	LogGroupArn string `json:"log_group_arn"`
+}
+
+func (s *ComponentSuite) TestQueryLogging() {
+	const component = "dns-primary/query-logging"
+	const stack = "default-test"
+
+	randomID := strings.ToLower(random.UniqueId())
+	domainName := fmt.Sprintf("example-%s.net", randomID)
+	inputs := map[string]interface{}{
+		"domain_names":                       []string{domainName},
+		"query_logging_enabled":              true,
+		"query_logging_resource_policy_name": fmt.Sprintf("route53-query-logging-%s", randomID),
+	}
+
+	defer s.DestroyAtmosComponent(s.T(), component, stack, &inputs)
+	options, _ := s.DeployAtmosComponent(s.T(), component, stack, &inputs)
+	assert.NotNil(s.T(), options)
+
+	configs := map[string]queryLoggingConfig{}
+	atmos.OutputStruct(s.T(), options, "query_logging_configs", &configs)
+	config, ok := configs[domainName]
+	assert.True(s.T(), ok, "query logging config missing for %s", domainName)
+	assert.NotEmpty(s.T(), config.Id)
+	assert.NotEmpty(s.T(), config.Arn)
+	// Route 53 only publishes query logs to log groups in us-east-1, whatever the component region.
+	assert.Contains(s.T(), config.LogGroupArn, ":us-east-1:")
+	assert.True(s.T(), strings.HasSuffix(config.LogGroupArn, fmt.Sprintf(":log-group:/aws/route53/%s", domainName)))
+
+	s.DriftTest(component, stack, &inputs)
+}
+
 func (s *ComponentSuite) TestEnabledFlag() {
 	const component = "dns-primary/disabled"
 	const stack = "default-test"
