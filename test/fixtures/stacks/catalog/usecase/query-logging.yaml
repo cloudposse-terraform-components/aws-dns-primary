@@ -1,0 +1,10 @@
+components:
+  terraform:
+    dns-primary/query-logging:
+      metadata:
+        component: target
+      vars:
+        domain_names:
+          - example.net
+        query_logging_enabled: true
+        query_logging_retention_in_days: 1

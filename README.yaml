@@ -98,6 +98,49 @@ usage: |-
   >
   > Use the [acm](https://docs.cloudposse.com/components/library/aws/acm) component for more advanced certificate
   > requirements.
+
+  ### DNS Query Logging
+
+  Set `query_logging_enabled: true` to enable
+  [Route 53 DNS query logging](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/query-logs.html) for every
+  public hosted zone the component creates. This satisfies the AWS Security Hub control
+  [Route53.2](https://docs.aws.amazon.com/securityhub/latest/userguide/route53-controls.html#route53-2)
+  ("Route 53 public hosted zones should log DNS queries").
+
+  For each zone, the component creates:
+
+  - a CloudWatch Logs log group named `/aws/route53/<zone name>`
+  - a Route 53 query logging configuration that publishes to that log group
+
+  It also creates one CloudWatch Logs resource policy that lets `route53.amazonaws.com` write to those log groups. The
+  policy is scoped with `aws:SourceAccount` and `aws:SourceArn` conditions so only these hosted zones can write.
+
+  Route 53 only publishes query logs to log groups in `us-east-1`. The log groups and resource policy are created in
+  `query_logging_region` (default `us-east-1`) through the resource-level `region` argument of the AWS provider v6,
+  regardless of the component's `region`.
+
+  ```yaml
+  components:
+    terraform:
+      dns-primary:
+        vars:
+          domain_names:
+            - example.net
+          query_logging_enabled: true
+          query_logging_retention_in_days: 365
+          # Optional: KMS key in us-east-1 whose key policy allows logs.us-east-1.amazonaws.com
+          query_logging_kms_key_arn: arn:aws:kms:us-east-1:111111111111:key/00000000-0000-0000-0000-000000000000
+  ```
+
+  > [!NOTE]
+  >
+  > CloudWatch Logs allows at most 10 account-scoped resource policies per Region. If the account already has a policy
+  > that lets `route53.amazonaws.com` write to `/aws/route53/*` log groups, set
+  > `query_logging_resource_policy_enabled: false` to reuse it.
+
+  > [!IMPORTANT]
+  >
+  > This component requires the AWS provider `>= 6.0.0`.
 references:
   - name: "cloudposse-terraform-components"
     description: "Cloud Posse's upstream component"
